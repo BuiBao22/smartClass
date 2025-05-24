@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Home Access Manager</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: white;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      /* Glass Effect Components */
+      .glass {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .header h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        background: linear-gradient(45deg, #fff, #a8edea);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .control-panel {
+        padding: 25px;
+      }
+
+      .date-selector {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .date-selector input {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        padding: 12px;
+        color: white;
+        font-size: 16px;
+        outline: none;
+      }
+
+      .date-selector input::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border: none;
+        border-radius: 10px;
+        padding: 12px 20px;
+        color: white;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .main-content {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 30px;
+      }
+
+      .access-log {
+        padding: 25px;
+        max-height: 600px;
+        overflow-y: auto;
+      }
+
+      .log-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .log-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      .log-table th,
+      .log-table td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .log-table th {
+        background: rgba(255, 255, 255, 0.1);
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+      }
+
+      .method-badge {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .method-rfid {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+      }
+      .method-fingerprint {
+        background: linear-gradient(135deg, #4ecdc4, #44a08d);
+      }
+      .method-keypad {
+        background: linear-gradient(135deg, #feca57, #ff9ff3);
+      }
+
+      .management-panel {
+        padding: 25px;
+      }
+
+      .panel-section {
+        margin-bottom: 30px;
+      }
+
+      .panel-section h3 {
+        margin-bottom: 15px;
+        font-size: 1.2em;
+      }
+
+      .uid-list {
+        max-height: 200px;
+        overflow-y: auto;
+        margin-bottom: 15px;
+      }
+
+      .uid-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        margin-bottom: 8px;
+      }
+
+      .uid-info {
+        flex: 1;
+      }
+
+      .uid-id {
+        font-family: monospace;
+        font-size: 0.9em;
+        opacity: 0.8;
+      }
+
+      .uid-name {
+        font-weight: 600;
+        margin-bottom: 2px;
+      }
+
+      .add-device {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .add-device input,
+      .add-device select {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        padding: 10px;
+        color: white;
+        font-size: 14px;
+        outline: none;
+      }
+
+      .add-device select option {
+        background: #333;
+        color: white;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .modal-content {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 30px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .close {
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+        color: white;
+        opacity: 0.7;
+      }
+
+      .close:hover {
+        opacity: 1;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+
+      .form-group input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        padding: 12px;
+        color: white;
+        font-size: 16px;
+        outline: none;
+      }
+
+      .btn-danger {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+      }
+
+      .btn-small {
+        padding: 6px 12px;
+        font-size: 12px;
+        border-radius: 6px;
+      }
+
+      .scrollbar-custom::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .scrollbar-custom::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+      }
+
+      .scrollbar-custom::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 3px;
+      }
+
+      @media (max-width: 768px) {
+        .controls {
+          grid-template-columns: 1fr;
+        }
+
+        .main-content {
+          grid-template-columns: 1fr;
+        }
+
+        .date-selector {
+          flex-direction: column;
+          align-items: stretch;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Smart Home Access Manager</h1>
+      </div>
+
+      <div class="controls">
+        <div class="glass control-panel">
+          <h3>Chọn ngày xem</h3>
+          <div class="date-selector">
+            <input type="date" id="selectedDate" value="" />
+            <button class="btn" onclick="loadAccessLog()">Xem lịch sử</button>
+          </div>
+        </div>
+
+        <div class="glass control-panel">
+          <h3>Thống kê nhanh</h3>
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              margin-top: 15px;
+            "
+          >
+            <div style="text-align: center">
+              <div style="font-size: 2em; font-weight: bold" id="todayCount">
+                0
+              </div>
+              <div style="opacity: 0.8">Hôm nay</div>
+            </div>
+            <div style="text-align: center">
+              <div style="font-size: 2em; font-weight: bold" id="totalDevices">
+                0
+              </div>
+              <div style="opacity: 0.8">Thiết bị</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="main-content">
+        <div class="glass access-log scrollbar-custom">
+          <div class="log-header">
+            <h3>Lịch sử ra vào - <span id="logDate">Hôm nay</span></h3>
+            <button class="btn btn-secondary" onclick="exportLog()">
+              Xuất dữ liệu
+            </button>
+          </div>
+          <table class="log-table">
+            <thead>
+              <tr>
+                <th>Tên</th>
+                <th>Phương thức</th>
+                <th>Thời gian</th>
+              </tr>
+            </thead>
+            <tbody id="accessLogBody">
+              <!-- Dữ liệu sẽ được load bằng JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="glass management-panel scrollbar-custom">
+          <div class="panel-section">
+            <h3>Quản lý thiết bị</h3>
+            <div class="uid-list scrollbar-custom" id="deviceList">
+              <!-- Danh sách thiết bị sẽ được load bằng JavaScript -->
+            </div>
+            <button class="btn" onclick="openAssignModal()">
+              Gán tên thiết bị
+            </button>
+          </div>
+
+          <div class="panel-section">
+            <h3>Thêm thiết bị mới</h3>
+            <div class="add-device">
+              <input type="text" id="newUID" placeholder="Nhập UID" />
+              <select id="deviceType">
+                <option value="rfid">RFID</option>
+                <option value="fingerprint">Vân tay</option>
+                <option value="keypad">Keypad</option>
+              </select>
+            </div>
+            <button class="btn" onclick="addDevice()">Thêm thiết bị</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal gán tên thiết bị -->
+    <div id="assignModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Gán tên cho thiết bị</h3>
+          <span class="close" onclick="closeAssignModal()">&times;</span>
+        </div>
+        <form id="assignForm">
+          <div class="form-group">
+            <label>Chọn thiết bị:</label>
+            <select id="selectUID" required>
+              <option value="">-- Chọn thiết bị --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Tên người dùng:</label>
+            <input type="text" id="userName" placeholder="Nhập tên" required />
+          </div>
+          <div style="display: flex; gap: 10px; justify-content: flex-end">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              onclick="closeAssignModal()"
+            >
+              Hủy
+            </button>
+            <button type="submit" class="btn">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // Dữ liệu giả lập
+      let devices = [
+        { uid: "RFID_001234", type: "rfid", name: "Nguyễn Văn A" },
+        { uid: "RFID_005678", type: "rfid", name: "Trần Thị B" },
+        { uid: "FP_987654", type: "fingerprint", name: "Lê Văn C" },
+        { uid: "FP_246810", type: "fingerprint", name: "" },
+        { uid: "KP_135790", type: "keypad", name: "Phạm Thị D" },
+        { uid: "RFID_112233", type: "rfid", name: "" },
+      ];
+
+      let accessLog = [
+        { uid: "RFID_001234", timestamp: new Date("2024-12-20T08:30:00") },
+        { uid: "FP_987654", timestamp: new Date("2024-12-20T09:15:00") },
+        { uid: "RFID_005678", timestamp: new Date("2024-12-20T10:45:00") },
+        { uid: "KP_135790", timestamp: new Date("2024-12-20T11:20:00") },
+        { uid: "RFID_001234", timestamp: new Date("2024-12-20T17:30:00") },
+        { uid: "FP_987654", timestamp: new Date("2024-12-20T18:15:00") },
+      ];
+
+      // Khởi tạo
+      document.addEventListener("DOMContentLoaded", function () {
+        // Set ngày hiện tại
+        const today = new Date().toISOString().split("T")[0];
+        document.getElementById("selectedDate").value = today;
+
+        // Load dữ liệu từ localStorage
+        loadFromStorage();
+
+        // Render giao diện
+        renderDeviceList();
+        loadAccessLog();
+        updateStats();
+
+        // Giả lập nhận dữ liệu từ ESP32 (demo)
+        simulateESP32Data();
+      });
+
+      function loadFromStorage() {
+        const storedDevices = localStorage.getItem("smartHomeDevices");
+        const storedLog = localStorage.getItem("smartHomeAccessLog");
+
+        if (storedDevices) {
+          devices = JSON.parse(storedDevices);
+        }
+
+        if (storedLog) {
+          accessLog = JSON.parse(storedLog).map((entry) => ({
+            ...entry,
+            timestamp: new Date(entry.timestamp),
+          }));
+        }
+      }
+
+      function saveToStorage() {
+        localStorage.setItem("smartHomeDevices", JSON.stringify(devices));
+        localStorage.setItem("smartHomeAccessLog", JSON.stringify(accessLog));
+      }
+
+      function renderDeviceList() {
+        const deviceList = document.getElementById("deviceList");
+        const selectUID = document.getElementById("selectUID");
+
+        deviceList.innerHTML = "";
+        selectUID.innerHTML = '<option value="">-- Chọn thiết bị --</option>';
+
+        devices.forEach((device) => {
+          // Render device list
+          const deviceItem = document.createElement("div");
+          deviceItem.className = "uid-item";
+          deviceItem.innerHTML = `
+                    <div class="uid-info">
+                        <div class="uid-name">${
+                          device.name || "Chưa gán tên"
+                        }</div>
+                        <div class="uid-id">${device.uid}</div>
+                    </div>
+                    <div>
+                        <span class="method-badge method-${
+                          device.type
+                        }">${getMethodName(device.type)}</span>
+                        <button class="btn btn-danger btn-small" onclick="removeDevice('${
+                          device.uid
+                        }')" style="margin-left: 10px;">Xóa</button>
+                    </div>
+                `;
+          deviceList.appendChild(deviceItem);
+
+          // Add to select option
+          const option = document.createElement("option");
+          option.value = device.uid;
+          option.textContent = `${device.uid} (${getMethodName(device.type)})`;
+          selectUID.appendChild(option);
+        });
+      }
+
+      function getMethodName(type) {
+        const methods = {
+          rfid: "RFID",
+          fingerprint: "Vân tay",
+          keypad: "Keypad",
+        };
+        return methods[type] || type;
+      }
+
+      function addDevice() {
+        const uid = document.getElementById("newUID").value.trim();
+        const type = document.getElementById("deviceType").value;
+
+        if (!uid) {
+          alert("Vui lòng nhập UID!");
+          return;
+        }
+
+        // Kiểm tra trùng lặp
+        if (devices.find((d) => d.uid === uid)) {
+          alert("UID này đã tồn tại!");
+          return;
+        }
+
+        devices.push({
+          uid: uid,
+          type: type,
+          name: "",
+        });
+
+        document.getElementById("newUID").value = "";
+        saveToStorage();
+        renderDeviceList();
+        updateStats();
+      }
+
+      function removeDevice(uid) {
+        if (confirm("Bạn có chắc muốn xóa thiết bị này?")) {
+          devices = devices.filter((d) => d.uid !== uid);
+          accessLog = accessLog.filter((log) => log.uid !== uid);
+          saveToStorage();
+          renderDeviceList();
+          loadAccessLog();
+          updateStats();
+        }
+      }
+
+      function openAssignModal() {
+        document.getElementById("assignModal").style.display = "flex";
+      }
+
+      function closeAssignModal() {
+        document.getElementById("assignModal").style.display = "none";
+        document.getElementById("assignForm").reset();
+      }
+
+      document
+        .getElementById("assignForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const uid = document.getElementById("selectUID").value;
+          const name = document.getElementById("userName").value.trim();
+
+          if (!uid || !name) {
+            alert("Vui lòng điền đầy đủ thông tin!");
+            return;
+          }
+
+          const device = devices.find((d) => d.uid === uid);
+          if (device) {
+            device.name = name;
+            saveToStorage();
+            renderDeviceList();
+            loadAccessLog();
+            closeAssignModal();
+            alert("Gán tên thành công!");
+          }
+        });
+
+      function loadAccessLog() {
+        const selectedDate = document.getElementById("selectedDate").value;
+        const logBody = document.getElementById("accessLogBody");
+        const logDate = document.getElementById("logDate");
+
+        const filterDate = selectedDate ? new Date(selectedDate) : new Date();
+        const dateString = filterDate.toLocaleDateString("vi-VN");
+        logDate.textContent = dateString;
+
+        // Filter logs by date
+        const filteredLogs = accessLog.filter((log) => {
+          const logDate = new Date(log.timestamp);
+          return logDate.toDateString() === filterDate.toDateString();
+        });
+
+        // Sort by timestamp (newest first)
+        filteredLogs.sort(
+          (a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+        );
+
+        logBody.innerHTML = "";
+
+        if (filteredLogs.length === 0) {
+          logBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" style="text-align: center; opacity: 0.6; padding: 40px;">
+                            Không có dữ liệu cho ngày này
+                        </td>
+                    </tr>
+                `;
+          return;
+        }
+
+        filteredLogs.forEach((log) => {
+          const device = devices.find((d) => d.uid === log.uid);
+          const name = device
+            ? device.name || "Chưa gán tên"
+            : "Thiết bị không xác định";
+          const method = device ? device.type : "unknown";
+          const time = new Date(log.timestamp).toLocaleTimeString("vi-VN");
+
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td>${name}</td>
+                    <td><span class="method-badge method-${method}">${getMethodName(
+            method
+          )}</span></td>
+                    <td>${time}</td>
+                `;
+          logBody.appendChild(row);
+        });
+      }
+
+      function updateStats() {
+        const today = new Date();
+        const todayLogs = accessLog.filter((log) => {
+          const logDate = new Date(log.timestamp);
+          return logDate.toDateString() === today.toDateString();
+        });
+
+        document.getElementById("todayCount").textContent = todayLogs.length;
+        document.getElementById("totalDevices").textContent = devices.length;
+      }
+
+      function exportLog() {
+        const selectedDate = document.getElementById("selectedDate").value;
+        const filterDate = selectedDate ? new Date(selectedDate) : new Date();
+
+        const filteredLogs = accessLog.filter((log) => {
+          const logDate = new Date(log.timestamp);
+          return logDate.toDateString() === filterDate.toDateString();
+        });
+
+        let csvContent = "Tên,Phương thức,Thời gian,UID\n";
+
+        filteredLogs.forEach((log) => {
+          const device = devices.find((d) => d.uid === log.uid);
+          const name = device
+            ? device.name || "Chưa gán tên"
+            : "Thiết bị không xác định";
+          const method = device ? getMethodName(device.type) : "Không xác định";
+          const time = new Date(log.timestamp).toLocaleString("vi-VN");
+
+          csvContent += `"${name}","${method}","${time}","${log.uid}"\n`;
+        });
+
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute(
+          "download",
+          `access_log_${filterDate.toISOString().split("T")[0]}.csv`
+        );
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+
+      // Giả lập nhận dữ liệu từ ESP32
+      function simulateESP32Data() {
+        // Giả lập việc nhận dữ liệu từ E-Ra IoT Platform mỗi 30 giây
+        setInterval(() => {
+          // Random chọn một device để giả lập quét
+          if (devices.length > 0 && Math.random() > 0.7) {
+            // 30% chance mỗi 30s
+            const randomDevice =
+              devices[Math.floor(Math.random() * devices.length)];
+
+            // Thêm log mới
+            accessLog.push({
+              uid: randomDevice.uid,
+              timestamp: new Date(),
+            });
+
+            saveToStorage();
+
+            // Nếu đang xem ngày hôm nay thì cập nhật
+            const selectedDate = document.getElementById("selectedDate").value;
+            const today = new Date().toISOString().split("T")[0];
+
+            if (!selectedDate || selectedDate === today) {
+              loadAccessLog();
+              updateStats();
+            }
+
+            // Hiển thị thông báo
+            console.log(
+              `Phát hiện truy cập: ${randomDevice.name || "Chưa gán tên"} - ${
+                randomDevice.uid
+              }`
+            );
+          }
+        }, 30000); // 30 giây
+      }
+
+      // Simulate adding some random access when page loads (for demo)
+      setTimeout(() => {
+        if (Math.random() > 0.5) {
+          const randomDevice =
+            devices[Math.floor(Math.random() * devices.length)];
+          accessLog.push({
+            uid: randomDevice.uid,
+            timestamp: new Date(),
+          });
+          saveToStorage();
+          loadAccessLog();
+          updateStats();
+        }
+      }, 5000);
+    </script>
+  </body>
+</html>
